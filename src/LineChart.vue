@@ -1,31 +1,16 @@
 <template>
   <div>
-    <span class="label-item">
-      <label for="title">
-        <b>Title</b>
-      </label>
-      <input label="title" v-model="model.title"/>
-    </span>
-    <span class="label-item">
-      <label for="subtitle">
-        <b>Subtitle</b>
-      </label>
-      <textarea label="subtitle" v-model="model.subtitle"/>
-      <div class="stack-wrapper">
-        <span>
-          <input class="toggle-input" type="checkbox" id="description-switch" v-model="model.hideDescription" />
-          <label class="toggle-label" for="description-switch">Toggle</label>
-        </span>
-        <p>Hide Description</p>
-      </div>
-    </span>
-    <div class="stack-wrapper">
-      <span>
-        <input class="toggle-input" type="checkbox" id="switch" v-model="model.stackedBars" />
-        <label class="toggle-label" for="switch">Toggle</label>
-      </span>
+    <fieldset class="intro-input">
+      <label><b>Title</b></label>
+      <input class="input title"  v-model="model.title"/>
+    </fieldset>
+    <span class="stack-wrapper">
+      <fieldset>
+        <input type="checkbox" id="switch" class="switch" v-model="model.stackedBars">
+        <label class="switch-label" for="switch">Toggle</label>
+      </fieldset>
       <p>Stacked Bars</p>
-    </div>
+    </span>
     <div class="column-button-wrapper">
       <button v-show="model.columns > 2" class="column-button remove-button" @click="removeColumn()">
         &#8722;
@@ -38,26 +23,26 @@
       <!-- Header/Lablels -->
       <tr class="dataHeading">
         <th v-for="(column, index) in model.columns" :key="index">
-          <label v-if="index === 0">Label</label>
-          <label v-else>{{index === 1 ? 'Measurement' : 'Msmt'}}</label>
-          <input class="input" :class="{error: model.items[0][index] === ''}"  v-model="model.items[0][index]"/>
+          <label>{{index === 0 ? 'Date' : 'Label'}}</label>
+          <input v-show="index !== 0" class="input" :class="{error: model.items[0][index] === ''}"  v-model="model.items[0][index]"/>
         </th>
       </tr>
       <!-- Dates/Data -->
       <tr class="data-list" v-for="(item, itemIndex) in model.items" :key="itemIndex">
-        <td class="data-list-item" v-for="(columnItem, columnIndex) in model.columns" :key="columnIndex" v-show="itemIndex !== 0">
-          <span>
+        <td class="data-list-item" v-for="(columnItem, columnIndex) in model.columns" :key="columnIndex">
+          <span  v-if="itemIndex !== 0">
             <input
-              v-if="columnIndex === 0"
-              class="input"
-              :class="{error: model.items[itemIndex][columnIndex] === ''}"
-              v-model="model.items[itemIndex][columnIndex]" />
+            v-if="columnIndex === 0"
+            class="input date-selector"
+            type="date"
+            :class="{error: model.items[itemIndex][columnIndex] === ''}"
+            v-model="model.items[itemIndex][columnIndex]" />
             <input
-              v-else
-              class="input"
-              :class="{error: model.items[itemIndex][columnIndex] === 0}"
-              v-model.number="model.items[itemIndex][columnIndex]" />
-          </span>
+            v-if="columnIndex !== 0"
+            class="input"
+            :class="{error: model.items[itemIndex][columnIndex] === undefined || isNaN(Number(model.items[itemIndex][columnIndex]))}"
+            v-model.number="model.items[itemIndex][columnIndex]" />
+        </span>
         </td>
       </tr>
     </table>
@@ -79,12 +64,10 @@ export default {
     initWith() {
       return {
         // needs to be equal to your storyblok plugin name
-        plugin: "bar-chart",
+        plugin: "line-chart",
         title: "",
-        subtitle: "",
-        items: [["", ""], ["", 0]],
+        items: [["Date", ""], ["", 0]],
         columns: 2,
-        hideDescription: false,
         stackedBars: false
       };
     },
@@ -111,7 +94,7 @@ export default {
       });
     },
     addField() {
-      this.model.items.push(["", 0]);
+      this.model.items.push([""]);
     },
     removeField() {
       this.model.items.pop();
@@ -129,33 +112,25 @@ export default {
 </script>
 
 <style>
-.label-item {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 10px;
-}
-
-.label-item:nth-child(2) {
-  padding: 10px 0 20px;
-  border-bottom: 1px solid #212121;
+.title {
+  padding-bottom: 20px;
 }
 
 .stack-wrapper {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  margin-top: 20px;
 }
 
 .stack-wrapper p {
-  margin: 0 0 0 10px;
+  margin-left: 10px;
 }
 
 .column-button-wrapper {
   width: 100%;
   display: flex;
   justify-content: flex-end;
-  margin-top: 10px;
+  margin-top: 20px;
 }
 
 .column-button {
@@ -183,16 +158,10 @@ export default {
 }
 
 .table .input {
+  font-size: 10px !important;
   padding: 4px !important;
   width: 100%;
-}
-
-.table th:first-child {
-  padding-left: 0;
-}
-
-th label {
-  font-size: 12px;
+  min-width: 40px !important;
 }
 
 .input.error {
@@ -254,15 +223,15 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   background-color: #f2525f;
 }
 
-/* Switch */
-.toggle-input[type="checkbox"] {
-  height: 0;
-  width: 0;
+/* TOGGLE */
+.switch {
+  height: 30px;
+  width: 30px;
   visibility: hidden;
   position: absolute;
 }
 
-.toggle-label {
+.switch-label {
   cursor: pointer;
   text-indent: -9999px;
   width: 40px;
@@ -273,7 +242,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   position: relative;
 }
 
-.toggle-label:after {
+.switch-label:after {
   content: "";
   position: absolute;
   top: 5px;
@@ -285,16 +254,16 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   transition: 0.3s;
 }
 
-.toggle-input:checked + .toggle-label {
+.switch:checked + label {
   background: #0bd28b;
 }
 
-.toggle-input:checked + .toggle-label:after {
+.switch:checked + label:after {
   left: calc(100% - 5px);
   transform: translateX(-100%);
 }
 
-.toggle-label:active:after {
+.switch-label:active:after {
   width: 30px;
 }
 </style>
