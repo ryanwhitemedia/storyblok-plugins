@@ -13,7 +13,7 @@
             </option>
           </select>
       </span>
-    <div class="dataHeading">
+    <div class="dataHeading" v-if="model.items !== undefined">
       <span>
         <label>Label</label>
         <input class="input" :class="{error: model.items[0][0] === ''}"  v-model="model.items[0][0]"/>
