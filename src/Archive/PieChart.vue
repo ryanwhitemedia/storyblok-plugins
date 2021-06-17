@@ -57,21 +57,20 @@ export default {
       );
     },
     addField() {
-      const length = this.model.items.length - 1;
-      // console.log(Number(this.model.items[length][1]));
+      // const length = this.model.items.length - 1;
       if (this.model.dataMeasurement === "" || this.model.dataType === "") {
         alert("Pleas provide a label and measurement type.");
         return;
       }
-      if (
-        isNaN(Number(this.model.items[length][1])) ||
-        this.model.items[length][0] === ""
-      ) {
-        alert(
-          "The Label must not be empty and the measurement must be a valid number."
-        );
-        return;
-      }
+      // if (
+      //   isNaN(Number(this.model.items[length][1])) ||
+      //   this.model.items[length][0] === ""
+      // ) {
+      //   alert(
+      //     "The Label must not be empty and the measurement must be a valid number."
+      //   );
+      //   return;
+      // }
       this.model.items.push(["", 0]);
     },
     removeField() {

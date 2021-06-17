@@ -1,67 +1,44 @@
 <template>
   <div>
-    <span class="label-item">
-      <label for="title">
-        <b>Title</b>
-      </label>
-      <input label="title" v-model="model.title"/>
-    </span>
-    <span class="label-item">
-      <label for="subtitle">
-        <b>Subtitle</b>
-      </label>
-      <textarea label="subtitle" v-model="model.subtitle"/>
-      <div class="stack-wrapper">
-        <span>
-          <input class="toggle-input" type="checkbox" id="description-switch" v-model="model.hideDescription" />
-          <label class="toggle-label" for="description-switch">Toggle</label>
-        </span>
-        <p>Hide Description</p>
-      </div>
-    </span>
-    <div class="stack-wrapper">
-      <span>
-        <input class="toggle-input" type="checkbox" id="switch" v-model="model.stackedBars" />
-        <label class="toggle-label" for="switch">Toggle</label>
+     <span class="margin-bottom-small block">
+        <label><b>Title</b></label>
+        <input class="input title"  v-model="model.title"/>
       </span>
-      <p>Stacked Bars</p>
+      <span class="flex-container flex-column">
+          <label><b>Color</b></label>
+          <select name="color" id="color" v-model="model.color">
+            <option value="">Select One:</option>
+            <option :key="option.text" v-for="option in options" :value="option.value">
+              {{ option.text }}
+            </option>
+          </select>
+      </span>
+    <div class="dataHeading">
+      <span>
+        <label>Label</label>
+        <input class="input" :class="{error: model.items[0][0] === ''}"  v-model="model.items[0][0]"/>
+      </span>
+      <span>
+        <label>Measurement</label>
+        <input class="input" :class="{error: model.items[0][1] === ''}"  v-model="model.items[0][1]"/>
+      </span>
     </div>
-    <div class="column-button-wrapper">
-      <button v-show="model.columns > 2" class="column-button remove-button" @click="removeColumn()">
-        &#8722;
-      </button>
-      <button class="column-button add-button" @click="addColumn()">
-        &#x002B;
-      </button>
-    </div>
-    <table class="table">
-      <!-- Header/Lablels -->
-      <tr class="dataHeading">
-        <th v-for="(column, index) in model.columns" :key="index">
-          <label v-if="index === 0">Label</label>
-          <label v-else>{{index === 1 ? 'Measurement' : 'Msmt'}}</label>
-          <input class="input" :class="{error: model.items[0][index] === ''}"  v-model="model.items[0][index]"/>
-        </th>
-      </tr>
-      <!-- Dates/Data -->
-      <tr class="data-list" v-for="(item, itemIndex) in model.items" :key="itemIndex">
-        <td class="data-list-item" v-for="(columnItem, columnIndex) in model.columns" :key="columnIndex" v-show="itemIndex !== 0">
-          <span>
+    <div>
+      <ol class="data-list">
+        <li class="data-list-item" v-for="(item, index) in model.items" :key="index">
+          <fieldset class="fieldset" v-if="index !== 0">
+            <input class="input" v-model="model.items[index][0]"/>
             <input
-              v-if="columnIndex === 0"
-              class="input"
-              :class="{error: model.items[itemIndex][columnIndex] === ''}"
-              v-model="model.items[itemIndex][columnIndex]" />
-            <input
-              v-else
-              class="input"
-              :class="{error: model.items[itemIndex][columnIndex] === 0}"
-              v-model.number="model.items[itemIndex][columnIndex]" />
-          </span>
-        </td>
-      </tr>
-    </table>
-    <div class="button-wrapper">
+            class="input"
+            :class="{error: isNaN(Number(model.items[index][1]))}"
+            v-model.number="model.items[index][1]" />
+            <button class="delete-button" @click="removeField(index)" v-show="index !== 0 && model.items.length > 2">
+              <span class="line"/>
+              <span class="line"/>
+            </button>
+          </fieldset>
+        </li>
+      </ol>
       <button class="button add-button" @click="addField()">
         ADD ITEM
       </button>
@@ -75,17 +52,29 @@
 <script>
 export default {
   mixins: [window.Storyblok.plugin],
+  data() {
+    return {
+      selected: "S",
+      options: [
+        { text: "Multi Color", value: "multi" },
+        { text: "Green", value: "green" },
+        { text: "Light Blue", value: "light-blue" },
+        { text: "Dark Blue", value: "dark-blue" },
+        { text: "Red", value: "red" },
+        { text: "Purple", value: "purple" },
+        { text: "Orange", value: "orange" },
+        { text: "Green", value: "green" }
+      ]
+    };
+  },
   methods: {
     initWith() {
       return {
         // needs to be equal to your storyblok plugin name
-        plugin: "bar-chart",
+        plugin: "pie-chart",
         title: "",
-        subtitle: "",
-        items: [["", ""], ["", 0]],
-        columns: 2,
-        hideDescription: false,
-        stackedBars: false
+        color: "",
+        items: [["", ""], ["", 0]]
       };
     },
     pluginCreated() {
@@ -94,27 +83,19 @@ export default {
         "View source and customize: https://github.com/storyblok/storyblok-fieldtype"
       );
     },
-    addColumn() {
-      this.model.columns = this.model.columns + 1;
-      this.model.items.map((item, index) => {
-        if (index === 0) {
-          item.push("");
-        } else {
-          item.push(0);
-        }
-      });
-    },
-    removeColumn() {
-      this.model.columns = this.model.columns - 1;
-      this.model.items.map(item => {
-        item.pop();
-      });
-    },
     addField() {
+      if (this.model.items[0][0] === "" || this.model.items[0][1] === "") {
+        alert("Pleas provide a label and measurement type.");
+        return;
+      }
       this.model.items.push(["", 0]);
     },
-    removeField() {
-      this.model.items.pop();
+    removeField(index) {
+      if (index) {
+        this.model.items.splice(index, 1);
+      } else {
+        this.model.items.pop();
+      }
     }
   },
   watch: {
@@ -129,74 +110,42 @@ export default {
 </script>
 
 <style>
-.label-item {
-  display: flex;
-  flex-direction: column;
+.title {
+  padding-bottom: 20px;
+}
+
+.dataHeading {
+  padding-bottom: 10px;
   margin-bottom: 10px;
-}
-
-.label-item:nth-child(2) {
-  padding: 10px 0 20px;
-  border-bottom: 1px solid #212121;
-}
-
-.stack-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  margin-top: 20px;
-}
-
-.stack-wrapper p {
-  margin: 0 0 0 10px;
-}
-
-.column-button-wrapper {
-  width: 100%;
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 10px;
-}
-
-.column-button {
-  outline: none;
-  border: 1px solid black;
-  margin-left: 5px;
-}
-
-.intro-input {
-  display: flex;
-  flex-direction: column;
+  margin-top: 25px;
+  border-bottom: 1px solid;
+  padding-right: 20px;
 }
 
 .dataHeading,
 .fieldset {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   column-gap: 10px;
 }
 
-.dataHeading {
-  margin-bottom: 10px;
-  margin-top: 25px;
-  padding-bottom: 10px;
-  vertical-align: baseline;
+.input {
   width: 100%;
-}
-
-.table .input {
-  padding: 4px !important;
-  width: 100%;
-}
-
-.table th:first-child {
-  padding-left: 0;
-}
-
-th label {
-  font-size: 12px;
 }
 
 .input.error {
   border: 1px #f2525f solid !important;
+}
+
+.p-metatags__google-link {
+  color: green;
+}
+
+.p-metatags__preview {
+  margin: 5px 0 15px;
+  padding: 10px;
+  color: #000;
+  background: #fff;
 }
 
 .data-list {
@@ -212,27 +161,47 @@ th label {
   list-style-type: none;
   margin: 0;
   padding: 0;
-}
-
-.date-selector {
-  width: 80px;
   position: relative;
 }
 
-input[type="date"]::-webkit-calendar-picker-indicator {
-  width: 10px;
+.data-list-item fieldset {
+  padding-right: 20px;
+}
+
+.delete-button {
   position: absolute;
-  top: 0;
   right: 0;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  height: 15px;
+  width: 15px;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f2525f;
+}
+
+.delete-button .line {
+  width: 10px;
+  height: 2px;
+  background-color: #fff;
+  transform-origin: center;
+  position: absolute;
+}
+
+.delete-button .line:first-child {
+  transform: rotate(45deg);
+}
+
+.delete-button .line:last-child {
+  transform: rotate(-45deg);
 }
 
 .list p {
   margin: 0;
-}
-
-.button-wrapper {
-  display: flex;
-  margin-top: 20px;
 }
 
 .button {
@@ -242,8 +211,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   border: none;
   color: #212121;
   font-weight: 600;
-  border: 1px solid black;
-  white-space: nowrap;
 }
 
 .add-button {
@@ -254,47 +221,24 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   background-color: #f2525f;
 }
 
-/* Switch */
-.toggle-input[type="checkbox"] {
-  height: 0;
-  width: 0;
-  visibility: hidden;
-  position: absolute;
+/* GLOBAL */
+.padding-bottom-small {
+  padding-bottom: 12px;
 }
 
-.toggle-label {
-  cursor: pointer;
-  text-indent: -9999px;
-  width: 40px;
-  height: 25px;
-  background: grey;
+.margin-bottom-small {
+  padding-bottom: 12px;
+}
+
+.flex-container {
+  display: flex;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+.block {
   display: block;
-  border-radius: 100px;
-  position: relative;
-}
-
-.toggle-label:after {
-  content: "";
-  position: absolute;
-  top: 5px;
-  left: 5px;
-  width: 15px;
-  height: 15px;
-  background: #fff;
-  border-radius: 90px;
-  transition: 0.3s;
-}
-
-.toggle-input:checked + .toggle-label {
-  background: #0bd28b;
-}
-
-.toggle-input:checked + .toggle-label:after {
-  left: calc(100% - 5px);
-  transform: translateX(-100%);
-}
-
-.toggle-label:active:after {
-  width: 30px;
 }
 </style>
