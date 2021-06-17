@@ -1,16 +1,25 @@
 <template>
   <div>
-    <span class="label-item">
+    <span class="uk-flex uk-flex-column uk-margin">
       <label for="title">
         <b>Title</b>
       </label>
       <input label="title" v-model="model.title"/>
     </span>
-    <span class="label-item">
+    <span class="uk-flex uk-flex-column uk-margin-small">
       <label for="subtitle">
         <b>Subtitle</b>
       </label>
       <textarea label="subtitle" v-model="model.subtitle"/>
+      <span class="uk-flex uk-flex-column uk-margin">
+        <label class="uk-margin-small"><b>Color</b></label>
+        <select name="color" id="color" v-model="model.color">
+          <option value="">Select One:</option>
+          <option :key="option.text" v-for="option in options" :value="option.value">
+            {{ option.text }}
+          </option>
+        </select>
+      </span>
       <div class="stack-wrapper">
         <span>
           <input class="toggle-input" type="checkbox" id="description-switch" v-model="model.hideDescription" />
@@ -19,7 +28,7 @@
         <p>Hide Description</p>
       </div>
     </span>
-    <div class="stack-wrapper">
+    <div class="stack-wrapper uk-margin">
       <span>
         <input class="toggle-input" type="checkbox" id="switch" v-model="model.stackedBars" />
         <label class="toggle-label" for="switch">Toggle</label>
@@ -75,6 +84,19 @@
 <script>
 export default {
   mixins: [window.Storyblok.plugin],
+  data() {
+    return {
+      options: [
+        { text: "Multi Color", value: "multi" },
+        { text: "Green", value: "green" },
+        { text: "Light Blue", value: "light-blue" },
+        { text: "Dark Blue", value: "dark-blue" },
+        { text: "Red", value: "red" },
+        { text: "Purple", value: "purple" },
+        { text: "Orange", value: "orange" }
+      ]
+    };
+  },
   methods: {
     initWith() {
       return {
@@ -82,6 +104,7 @@ export default {
         plugin: "bar-chart",
         title: "",
         subtitle: "",
+        color: "",
         items: [["", ""], ["", 0]],
         columns: 2,
         hideDescription: false,
@@ -129,16 +152,6 @@ export default {
 </script>
 
 <style>
-.label-item {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 10px;
-}
-
-.label-item:nth-child(2) {
-  padding: 10px 0 20px;
-  border-bottom: 1px solid #212121;
-}
 
 .stack-wrapper {
   display: flex;
@@ -206,6 +219,7 @@ th label {
   margin-bottom: 20px;
   padding: 0;
   list-style-type: none;
+  border-bottom: none !important;
 }
 
 .data-list-item {
@@ -239,7 +253,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   outline: none;
   padding: 8px 10px;
   margin-right: 10px;
-  border: none;
   color: #212121;
   font-weight: 600;
   border: 1px solid black;
@@ -297,4 +310,5 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .toggle-label:active:after {
   width: 30px;
 }
+
 </style>

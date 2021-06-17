@@ -4,12 +4,14 @@
       <label><b>Title</b></label>
       <input class="input title"  v-model="model.title"/>
     </fieldset>
-    <span class="stack-wrapper">
-      <fieldset>
-        <input type="checkbox" id="switch" class="switch" v-model="model.stackedBars">
-        <label class="switch-label" for="switch">Toggle</label>
-      </fieldset>
-      <p>Stacked Bars</p>
+    <span class="uk-flex uk-flex-column uk-margin">
+      <label class="uk-margin-small"><b>Color</b></label>
+      <select name="color" id="color" v-model="model.color">
+        <option value="">Select One:</option>
+        <option :key="option.text" v-for="option in options" :value="option.value">
+          {{ option.text }}
+        </option>
+      </select>
     </span>
     <div class="column-button-wrapper">
       <button v-show="model.columns > 2" class="column-button remove-button" @click="removeColumn()">
@@ -30,6 +32,10 @@
       <!-- Dates/Data -->
       <tr class="data-list" v-for="(item, itemIndex) in model.items" :key="itemIndex">
         <td class="data-list-item" v-for="(columnItem, columnIndex) in model.columns" :key="columnIndex">
+           <button class="delete-button" @click="removeField(itemIndex)" v-show="itemIndex !== 0 && model.items.length > 2">
+            <span class="line"/>
+            <span class="line"/>
+          </button>
           <span  v-if="itemIndex !== 0">
             <input
             v-if="columnIndex === 0"
@@ -60,15 +66,28 @@
 <script>
 export default {
   mixins: [window.Storyblok.plugin],
+  data() {
+    return {
+      options: [
+        { text: "Multi Color", value: "multi" },
+        { text: "Green", value: "green" },
+        { text: "Light Blue", value: "light-blue" },
+        { text: "Dark Blue", value: "dark-blue" },
+        { text: "Red", value: "red" },
+        { text: "Purple", value: "purple" },
+        { text: "Orange", value: "orange" }
+      ]
+    };
+  },
   methods: {
     initWith() {
       return {
         // needs to be equal to your storyblok plugin name
         plugin: "line-chart",
         title: "",
+        color: "",
         items: [["Date", ""], ["", 0]],
-        columns: 2,
-        stackedBars: false
+        columns: 2
       };
     },
     pluginCreated() {
@@ -96,8 +115,12 @@ export default {
     addField() {
       this.model.items.push([""]);
     },
-    removeField() {
-      this.model.items.pop();
+    removeField(index) {
+      if (index) {
+        this.model.items.splice(index, 1);
+      } else {
+        this.model.items.pop();
+      }
     }
   },
   watch: {
@@ -171,10 +194,10 @@ export default {
 .data-list {
   margin-top: 0px;
   margin-left: 0px;
-  margin-right: 0px;
   margin-bottom: 20px;
   padding: 0;
   list-style-type: none;
+  position: relative;
 }
 
 .data-list-item {
@@ -265,5 +288,36 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 .switch-label:active:after {
   width: 30px;
+}
+
+.delete-button {
+  position: absolute;
+  right: 0;
+  top: 12px;
+  margin: auto 0;
+  height: 15px;
+  width: 15px;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f2525f;
+}
+
+.delete-button .line {
+  width: 10px;
+  height: 2px;
+  background-color: #fff;
+  transform-origin: center;
+  position: absolute;
+}
+
+.delete-button .line:first-child {
+  transform: rotate(45deg);
+}
+
+.delete-button .line:last-child {
+  transform: rotate(-45deg);
 }
 </style>

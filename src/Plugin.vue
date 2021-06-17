@@ -1,44 +1,58 @@
 <template>
   <div>
-     <span class="margin-bottom-small block">
-        <label><b>Title</b></label>
-        <input class="input title"  v-model="model.title"/>
-      </span>
-      <span class="flex-container flex-column">
-          <label><b>Color</b></label>
-          <select name="color" id="color" v-model="model.color">
-            <option value="">Select One:</option>
-            <option :key="option.text" v-for="option in options" :value="option.value">
-              {{ option.text }}
-            </option>
-          </select>
-      </span>
-    <div class="dataHeading">
-      <span>
-        <label>Label</label>
-        <input class="input" :class="{error: model.items[0][0] === ''}"  v-model="model.items[0][0]"/>
-      </span>
-      <span>
-        <label>Measurement</label>
-        <input class="input" :class="{error: model.items[0][1] === ''}"  v-model="model.items[0][1]"/>
-      </span>
+    <fieldset class="intro-input">
+      <label><b>Title</b></label>
+      <input class="input title"  v-model="model.title"/>
+    </fieldset>
+    <span class="uk-flex uk-flex-column uk-margin">
+      <label class="uk-margin-small"><b>Color</b></label>
+      <select name="color" id="color" v-model="model.color">
+        <option value="">Select One:</option>
+        <option :key="option.text" v-for="option in options" :value="option.value">
+          {{ option.text }}
+        </option>
+      </select>
+    </span>
+    <div class="column-button-wrapper">
+      <button v-show="model.columns > 2" class="column-button remove-button" @click="removeColumn()">
+        &#8722;
+      </button>
+      <button class="column-button add-button" @click="addColumn()">
+        &#x002B;
+      </button>
     </div>
-    <div>
-      <ol class="data-list">
-        <li class="data-list-item" v-for="(item, index) in model.items" :key="index">
-          <fieldset class="fieldset" v-if="index !== 0">
-            <input class="input" v-model="model.items[index][0]"/>
+    <table class="table">
+      <!-- Header/Lablels -->
+      <tr class="dataHeading">
+        <th v-for="(column, index) in model.columns" :key="index">
+          <label>{{index === 0 ? 'Date' : 'Label'}}</label>
+          <input v-show="index !== 0" class="input" :class="{error: model.items[0][index] === ''}"  v-model="model.items[0][index]"/>
+        </th>
+      </tr>
+      <!-- Dates/Data -->
+      <tr class="data-list" v-for="(item, itemIndex) in model.items" :key="itemIndex">
+        <td class="data-list-item" v-for="(columnItem, columnIndex) in model.columns" :key="columnIndex">
+           <button class="delete-button" @click="removeField(itemIndex)" v-show="itemIndex !== 0 && model.items.length > 2">
+            <span class="line"/>
+            <span class="line"/>
+          </button>
+          <span  v-if="itemIndex !== 0">
             <input
+            v-if="columnIndex === 0"
+            class="input date-selector"
+            type="date"
+            :class="{error: model.items[itemIndex][columnIndex] === ''}"
+            v-model="model.items[itemIndex][columnIndex]" />
+            <input
+            v-if="columnIndex !== 0"
             class="input"
-            :class="{error: isNaN(Number(model.items[index][1]))}"
-            v-model.number="model.items[index][1]" />
-            <button class="delete-button" @click="removeField(index)" v-show="index !== 0 && model.items.length > 2">
-              <span class="line"/>
-              <span class="line"/>
-            </button>
-          </fieldset>
-        </li>
-      </ol>
+            :class="{error: model.items[itemIndex][columnIndex] === undefined || isNaN(Number(model.items[itemIndex][columnIndex]))}"
+            v-model.number="model.items[itemIndex][columnIndex]" />
+        </span>
+        </td>
+      </tr>
+    </table>
+    <div class="button-wrapper">
       <button class="button add-button" @click="addField()">
         ADD ITEM
       </button>
@@ -54,7 +68,6 @@ export default {
   mixins: [window.Storyblok.plugin],
   data() {
     return {
-      selected: "S",
       options: [
         { text: "Multi Color", value: "multi" },
         { text: "Green", value: "green" },
@@ -62,8 +75,7 @@ export default {
         { text: "Dark Blue", value: "dark-blue" },
         { text: "Red", value: "red" },
         { text: "Purple", value: "purple" },
-        { text: "Orange", value: "orange" },
-        { text: "Green", value: "green" }
+        { text: "Orange", value: "orange" }
       ]
     };
   },
@@ -71,10 +83,11 @@ export default {
     initWith() {
       return {
         // needs to be equal to your storyblok plugin name
-        plugin: "pie-chart",
+        plugin: "line-chart",
         title: "",
         color: "",
-        items: [["", ""], ["", 0]]
+        items: [["Date", ""], ["", 0]],
+        columns: 2
       };
     },
     pluginCreated() {
@@ -83,12 +96,24 @@ export default {
         "View source and customize: https://github.com/storyblok/storyblok-fieldtype"
       );
     },
+    addColumn() {
+      this.model.columns = this.model.columns + 1;
+      this.model.items.map((item, index) => {
+        if (index === 0) {
+          item.push("");
+        } else {
+          item.push(0);
+        }
+      });
+    },
+    removeColumn() {
+      this.model.columns = this.model.columns - 1;
+      this.model.items.map(item => {
+        item.pop();
+      });
+    },
     addField() {
-      if (this.model.items[0][0] === "" || this.model.items[0][1] === "") {
-        alert("Pleas provide a label and measurement type.");
-        return;
-      }
-      this.model.items.push(["", 0]);
+      this.model.items.push([""]);
     },
     removeField(index) {
       if (index) {
@@ -114,66 +139,162 @@ export default {
   padding-bottom: 20px;
 }
 
-.dataHeading {
-  padding-bottom: 10px;
-  margin-bottom: 10px;
-  margin-top: 25px;
-  border-bottom: 1px solid;
-  padding-right: 20px;
+.stack-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.stack-wrapper p {
+  margin-left: 10px;
+}
+
+.column-button-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.column-button {
+  outline: none;
+  border: 1px solid black;
+  margin-left: 5px;
+}
+
+.intro-input {
+  display: flex;
+  flex-direction: column;
 }
 
 .dataHeading,
 .fieldset {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   column-gap: 10px;
 }
 
-.input {
+.dataHeading {
+  margin-bottom: 10px;
+  margin-top: 25px;
+  padding-bottom: 10px;
+  vertical-align: baseline;
   width: 100%;
+}
+
+.table .input {
+  font-size: 10px !important;
+  padding: 4px !important;
+  width: 100%;
+  min-width: 40px !important;
 }
 
 .input.error {
   border: 1px #f2525f solid !important;
 }
 
-.p-metatags__google-link {
-  color: green;
-}
-
-.p-metatags__preview {
-  margin: 5px 0 15px;
-  padding: 10px;
-  color: #000;
-  background: #fff;
-}
-
 .data-list {
   margin-top: 0px;
   margin-left: 0px;
-  margin-right: 0px;
   margin-bottom: 20px;
   padding: 0;
   list-style-type: none;
+  position: relative;
 }
 
 .data-list-item {
   list-style-type: none;
   margin: 0;
   padding: 0;
+}
+
+.date-selector {
+  width: 80px;
   position: relative;
 }
 
-.data-list-item fieldset {
-  padding-right: 20px;
+input[type="date"]::-webkit-calendar-picker-indicator {
+  width: 10px;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.list p {
+  margin: 0;
+}
+
+.button-wrapper {
+  display: flex;
+  margin-top: 20px;
+}
+
+.button {
+  outline: none;
+  padding: 8px 10px;
+  margin-right: 10px;
+  border: none;
+  color: #212121;
+  font-weight: 600;
+  border: 1px solid black;
+  white-space: nowrap;
+}
+
+.add-button {
+  background-color: #54e0ae;
+}
+
+.remove-button {
+  background-color: #f2525f;
+}
+
+/* TOGGLE */
+.switch {
+  height: 30px;
+  width: 30px;
+  visibility: hidden;
+  position: absolute;
+}
+
+.switch-label {
+  cursor: pointer;
+  text-indent: -9999px;
+  width: 40px;
+  height: 25px;
+  background: grey;
+  display: block;
+  border-radius: 100px;
+  position: relative;
+}
+
+.switch-label:after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 15px;
+  height: 15px;
+  background: #fff;
+  border-radius: 90px;
+  transition: 0.3s;
+}
+
+.switch:checked + label {
+  background: #0bd28b;
+}
+
+.switch:checked + label:after {
+  left: calc(100% - 5px);
+  transform: translateX(-100%);
+}
+
+.switch-label:active:after {
+  width: 30px;
 }
 
 .delete-button {
   position: absolute;
   right: 0;
-  top: 0;
-  bottom: 0;
-  margin: auto;
+  top: 12px;
+  margin: auto 0;
   height: 15px;
   width: 15px;
   border: none;
@@ -198,47 +319,5 @@ export default {
 
 .delete-button .line:last-child {
   transform: rotate(-45deg);
-}
-
-.list p {
-  margin: 0;
-}
-
-.button {
-  outline: none;
-  padding: 8px 10px;
-  margin-right: 10px;
-  border: none;
-  color: #212121;
-  font-weight: 600;
-}
-
-.add-button {
-  background-color: #54e0ae;
-}
-
-.remove-button {
-  background-color: #f2525f;
-}
-
-/* GLOBAL */
-.padding-bottom-small {
-  padding-bottom: 12px;
-}
-
-.margin-bottom-small {
-  padding-bottom: 12px;
-}
-
-.flex-container {
-  display: flex;
-}
-
-.flex-column {
-  flex-direction: column;
-}
-
-.block {
-  display: block;
 }
 </style>
