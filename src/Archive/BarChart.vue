@@ -68,6 +68,10 @@
               v-model.number="model.items[itemIndex][columnIndex]" />
           </span>
         </td>
+        <button class="delete-button" @click="removeField(itemIndex)" v-show="itemIndex !== 0 && model.items.length > 2">
+            <span class="line"/>
+            <span class="line"/>
+          </button>
       </tr>
     </table>
     <div class="button-wrapper">
@@ -136,8 +140,12 @@ export default {
     addField() {
       this.model.items.push(["", 0]);
     },
-    removeField() {
-      this.model.items.pop();
+    removeField(index) {
+      if (index) {
+        this.model.items.splice(index, 1);
+      } else {
+        this.model.items.pop();
+      }
     }
   },
   watch: {
@@ -220,6 +228,7 @@ th label {
   padding: 0;
   list-style-type: none;
   border-bottom: none !important;
+  position: relative;
 }
 
 .data-list-item {
@@ -309,6 +318,37 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 .toggle-label:active:after {
   width: 30px;
+}
+
+.delete-button {
+  position: absolute;
+  right: 0;
+  top: 12px;
+  margin: auto 0;
+  height: 15px;
+  width: 15px;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f2525f;
+}
+
+.delete-button .line {
+  width: 10px;
+  height: 2px;
+  background-color: #fff;
+  transform-origin: center;
+  position: absolute;
+}
+
+.delete-button .line:first-child {
+  transform: rotate(45deg);
+}
+
+.delete-button .line:last-child {
+  transform: rotate(-45deg);
 }
 
 </style>
