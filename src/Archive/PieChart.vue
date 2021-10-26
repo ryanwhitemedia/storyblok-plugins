@@ -4,7 +4,15 @@
         <label><b>Title</b></label>
         <input class="input title"  v-model="model.title"/>
       </span>
-      <span class="flex-container flex-column">
+      <div class="uk-margin-small">
+        <fieldset class="intro-input uk-flex uk-flex-column">
+          <label for="subtitle">
+            <b>Subtitle</b>
+          </label>
+          <textarea label="subtitle" v-model="model.subtitle"/>
+        </fieldset>
+      </div>
+      <div class="uk-margin uk-flex uk-flex-column">
           <label><b>Color</b></label>
           <select name="color" id="color" v-model="model.color">
             <option value="">Select One:</option>
@@ -12,7 +20,7 @@
               {{ option.text }}
             </option>
           </select>
-      </span>
+      </div>
     <div class="dataHeading" v-if="model.items !== undefined">
       <span>
         <label>Label</label>
@@ -37,9 +45,12 @@
               <span class="line"/>
             </button>
           </fieldset>
+          <button v-if="index !== 0" class="add-item-button" @click="addField(index)">
+            &#x002B;
+          </button>
         </li>
       </ol>
-      <button class="button add-button" @click="addField()">
+      <button class="button add-button" @click="addField(model.items.length)">
         ADD ITEM
       </button>
       <button v-show="model.items && model.items.length >= 3" class="button remove-button" @click="removeField()">
@@ -71,6 +82,7 @@ export default {
         // needs to be equal to your storyblok plugin name
         plugin: "pie-chart",
         title: "",
+        subtitle: "",
         color: "",
         items: [["", ""], ["", 0]]
       };
@@ -81,12 +93,12 @@ export default {
         "View source and customize: https://github.com/storyblok/storyblok-fieldtype"
       );
     },
-    addField() {
+    addField(index) {
       if (this.model.items[0][0] === "" || this.model.items[0][1] === "") {
         alert("Pleas provide a label and measurement type.");
         return;
       }
-      this.model.items.push(["", 0]);
+      this.model.items.splice(index, 0, [""]);
     },
     removeField(index) {
       if (index) {
@@ -166,6 +178,22 @@ export default {
   padding-right: 20px;
 }
 
+.add-item-button {
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin: auto 0;
+  height: 15px;
+  width: 15px;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0bd28b;
+  z-index: 1;
+}
+
 .delete-button {
   position: absolute;
   right: 0;
@@ -226,14 +254,6 @@ export default {
 
 .margin-bottom-small {
   padding-bottom: 12px;
-}
-
-.flex-container {
-  display: flex;
-}
-
-.flex-column {
-  flex-direction: column;
 }
 
 .block {

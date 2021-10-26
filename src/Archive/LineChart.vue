@@ -4,6 +4,14 @@
       <label><b>Title</b></label>
       <input class="input title"  v-model="model.title"/>
     </fieldset>
+    <div class="uk-margin">
+      <fieldset class="intro-input">
+        <label for="subtitle">
+          <b>Subtitle</b>
+        </label>
+        <textarea label="subtitle" v-model="model.subtitle"/>
+      </fieldset>
+    </div>
     <span class="uk-flex uk-flex-column uk-margin">
       <label class="uk-margin-small"><b>Color</b></label>
       <select name="color" id="color" v-model="model.color">
@@ -12,6 +20,15 @@
           {{ option.text }}
         </option>
       </select>
+    </span>
+    <span class="uk-flex uk-flex-column uk-margin">
+      <label for="dateFormat" class="uk-margin-small"><b>Date Format</b></label>
+      <span class="uk-margin-small">Example: MM-YYY or YYY</span>
+      <input name="dateFormat" id="dateFormat" v-model="model.dateFormat" class="input title"  />
+    </span>
+    <span class="uk-flex uk-flex-column uk-margin">
+      <label for="gridSpacing" class="uk-margin-small"><b>Grid Spacing</b></label>
+      <input name="gridSpacing" id="gridSpacing" v-model.number="model.gridSpacing" class="input title" />
     </span>
     <div class="column-button-wrapper">
       <button v-show="model.columns > 2" class="column-button remove-button" @click="removeColumn()">
@@ -30,8 +47,11 @@
         </th>
       </tr>
       <!-- Dates/Data -->
-      <tr class="data-list" v-for="(item, itemIndex) in model.items" :key="itemIndex">
+      <tr class="data-list" :class="{hideItem: itemIndex === 0}" v-for="(item, itemIndex) in model.items" :key="itemIndex">
         <td class="data-list-item" v-for="(columnItem, columnIndex) in model.columns" :key="columnIndex">
+          <button v-show="columnIndex === 0" class="add-item-button" @click="addField(itemIndex)">
+            &#x002B;
+          </button>
            <button class="delete-button" @click="removeField(itemIndex)" v-show="itemIndex !== 0 && model.items.length > 2">
             <span class="line"/>
             <span class="line"/>
@@ -53,7 +73,7 @@
       </tr>
     </table>
     <div class="button-wrapper">
-      <button class="button add-button" @click="addField()">
+      <button class="button add-button" @click="addField(model.items.length)">
         ADD ITEM
       </button>
       <button v-show="model.items && model.items.length >= 3" class="button remove-button" @click="removeField()">
@@ -79,15 +99,27 @@ export default {
       ]
     };
   },
+  computed: {
+    gridSpacingEmpty: function() {
+      return (
+        this.model.gridSpacing !== null &&
+        this.model.gridSpacing !== "" &&
+        isNaN(Number(this.model.gridSpacing))
+      );
+    }
+  },
   methods: {
     initWith() {
       return {
         // needs to be equal to your storyblok plugin name
         plugin: "line-chart",
         title: "",
+        subtitle: "",
         color: "",
-        items: [["Date", ""], ["", 0]],
-        columns: 2
+        items: [["Date", ""], [""]],
+        columns: 2,
+        gridSpacing: "",
+        dateFormat: ""
       };
     },
     pluginCreated() {
@@ -112,8 +144,9 @@ export default {
         item.pop();
       });
     },
-    addField() {
-      this.model.items.push([""]);
+    addField(index) {
+      this.model.items.splice(index, 0, [""]);
+      // this.model.items.push([""]);
     },
     removeField(index) {
       if (index) {
@@ -154,6 +187,10 @@ export default {
   display: flex;
   justify-content: flex-end;
   margin-top: 20px;
+}
+
+.hideItem {
+  display: none;
 }
 
 .column-button {
@@ -204,6 +241,7 @@ export default {
   list-style-type: none;
   margin: 0;
   padding: 0;
+  position: relative;
 }
 
 .date-selector {
@@ -303,6 +341,22 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   align-items: center;
   justify-content: center;
   background: #f2525f;
+}
+
+.add-item-button {
+  position: absolute;
+  left: 0;
+  top: 12px;
+  margin: auto 0;
+  height: 15px;
+  width: 15px;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0bd28b;
+  z-index: 1;
 }
 
 .delete-button .line {

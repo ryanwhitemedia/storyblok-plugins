@@ -68,6 +68,9 @@
               v-model.number="model.items[itemIndex][columnIndex]" />
           </span>
         </td>
+        <button class="add-item-button" @click="addField(itemIndex)">
+          &#x002B;
+        </button>
         <button class="delete-button" @click="removeField(itemIndex)" v-show="itemIndex !== 0 && model.items.length > 2">
             <span class="line"/>
             <span class="line"/>
@@ -75,7 +78,7 @@
       </tr>
     </table>
     <div class="button-wrapper">
-      <button class="button add-button" @click="addField()">
+      <button class="button add-button" @click="addField(model.items.length)">
         ADD ITEM
       </button>
       <button v-show="model.items && model.items.length >= 3" class="button remove-button" @click="removeField()">
@@ -137,8 +140,9 @@ export default {
         item.pop();
       });
     },
-    addField() {
-      this.model.items.push(["", 0]);
+    addField(index) {
+      this.model.items.splice(index, 0, [""]);
+      // this.model.items.push([""]);
     },
     removeField(index) {
       if (index) {
@@ -318,6 +322,22 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 .toggle-label:active:after {
   width: 30px;
+}
+
+.add-item-button {
+  position: absolute;
+  left: 0;
+  top: 12px;
+  margin: auto 0;
+  height: 15px;
+  width: 15px;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0bd28b;
+  z-index: 1;
 }
 
 .delete-button {
