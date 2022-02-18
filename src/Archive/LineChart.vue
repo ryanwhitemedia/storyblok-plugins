@@ -12,6 +12,14 @@
         <textarea label="subtitle" v-model="model.subtitle"/>
       </fieldset>
     </div>
+    <div class="uk-flex uk-flex-column uk-margin">
+      <label class="uk-margin-medium-right"><b>Use Category Axis</b></label>
+      <span class="uk-margin-medium-left">
+        <input class="toggle-input" type="checkbox" id="switch" v-model="model.useCategoryAxis" />
+        <label class="toggle-label" for="switch">Toggle</label>
+      </span>
+      <p style="margin-top: 0">Using Category Axis will remove all smart date X Axis logic. Items will be spaced out evenly no matter what their label is.</p>
+    </div>
     <span class="uk-flex uk-flex-column uk-margin">
       <label class="uk-margin-small"><b>Color</b></label>
       <select name="color" id="color" v-model="model.color">
@@ -22,13 +30,35 @@
       </select>
     </span>
     <span class="uk-flex uk-flex-column uk-margin">
-      <label for="dateFormat" class="uk-margin-small"><b>Date Format</b></label>
-      <span class="uk-margin-small">Example: MM-YYY or YYY</span>
-      <input name="dateFormat" id="dateFormat" v-model="model.dateFormat" class="input title"  />
+      <label><b>Data Interval</b></label>
+      <p style="margin-top: 0" class="uk-margin-small">For example, if we have daily data (one data item per day), we'd select "day":</p>
+      <p style="margin-top: 3px">Do not set "year" unless every data point is the same date of different years.</p>
+      <select name="dateInterval" id="dateInterval" v-model="model.dateInterval">
+        <option value="">Select One:</option>
+        <option :key="interval" v-for="interval in dateIntervals" :value="interval">
+          {{ interval }}
+        </option>
+      </select>
     </span>
     <span class="uk-flex uk-flex-column uk-margin">
-      <label for="gridSpacing" class="uk-margin-small"><b>Grid Spacing</b></label>
-      <input name="gridSpacing" id="gridSpacing" v-model.number="model.gridSpacing" class="input title" />
+      <label><b>Grid Date Interval</b></label>
+      <p style="margin-top: 0" class="uk-margin-small">Interval to show the grid lines at.</p>
+      <select name="gridDateInterval" id="gridDateInterval" v-model="model.gridDateInterval">
+        <option value="">Select One:</option>
+        <option :key="interval" v-for="interval in dateIntervals" :value="interval">
+          {{ interval }}
+        </option>
+      </select>
+    </span>
+    <span class="uk-flex uk-flex-column uk-margin">
+      <label><b>Grid Line Frequency</b></label>
+      <p style="margin-top: 0" class="uk-margin-small">How often to show a line for selected Date Interval. 1 means show for every "Date Interval" selected. 2 means show for every second "Date Interval".</p>
+      <input name="gridInterval" id="gridInterval" v-model="model.gridInterval" class="input title"  />
+    </span>
+    <span class="uk-flex uk-flex-column uk-margin">
+      <label><b>Date Format</b></label>
+      <p style="margin-top: 0" class="uk-margin-small">Example: MM-YYY or YYY</p>
+      <input name="dateFormat" id="dateFormat" v-model="model.dateFormat" class="input title"  />
     </span>
     <div class="column-button-wrapper">
       <button v-show="model.columns > 2" class="column-button remove-button" @click="removeColumn()">
@@ -58,16 +88,26 @@
           </button>
           <span  v-if="itemIndex !== 0">
             <input
-            v-if="columnIndex === 0"
-            class="input date-selector"
-            type="date"
-            :class="{error: model.items[itemIndex][columnIndex] === ''}"
-            v-model="model.items[itemIndex][columnIndex]" />
+              v-show="columnIndex === 0"
+              v-if="model.useCategoryAxis === true"
+              class="input date-selector"
+              :class="{error: model.items[itemIndex][columnIndex] === ''}"
+              v-model="model.items[itemIndex][columnIndex]"
+              />
             <input
-            v-if="columnIndex !== 0"
-            class="input"
-            :class="{error: model.items[itemIndex][columnIndex] === undefined || isNaN(Number(model.items[itemIndex][columnIndex]))}"
-            v-model.number="model.items[itemIndex][columnIndex]" />
+              v-else
+              v-show="columnIndex === 0"
+              class="input date-selector"
+              type="date"
+              :class="{error: model.items[itemIndex][columnIndex] === ''}"
+              v-model="model.items[itemIndex][columnIndex]"
+              />
+            <input
+              v-if="columnIndex !== 0"
+              class="input"
+              :class="{error: model.items[itemIndex][columnIndex] === undefined || isNaN(Number(model.items[itemIndex][columnIndex]))}"
+              v-model.number="model.items[itemIndex][columnIndex]"
+              />
         </span>
         </td>
       </tr>
@@ -96,7 +136,8 @@ export default {
         { text: "Red", value: "red" },
         { text: "Purple", value: "purple" },
         { text: "Orange", value: "orange" }
-      ]
+      ],
+      dateIntervals: ["day", "week", "month", "year"]
     };
   },
   computed: {
@@ -119,7 +160,11 @@ export default {
         items: [["Date", ""], [""]],
         columns: 2,
         gridSpacing: "",
-        dateFormat: ""
+        dateFormat: "",
+        dateInterval: "month",
+        gridDateInterval: "year",
+        gridInterval: 1,
+        useCategoryAxis: false
       };
     },
     pluginCreated() {
@@ -373,5 +418,51 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 .delete-button .line:last-child {
   transform: rotate(-45deg);
+}
+
+/* TOGGLE */
+
+/* Switch */
+.toggle-input[type="checkbox"] {
+  height: 0;
+  width: 0;
+  visibility: hidden;
+  position: absolute;
+}
+
+.toggle-label {
+  cursor: pointer;
+  text-indent: -9999px;
+  width: 40px;
+  height: 25px;
+  background: grey;
+  display: block;
+  border-radius: 100px;
+  position: relative;
+}
+
+.toggle-label:after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 15px;
+  height: 15px;
+  background: #fff;
+  border-radius: 90px;
+  transition: 0.3s;
+}
+
+.toggle-input:checked + .toggle-label {
+  background: #0bd28b;
+}
+
+.toggle-input:checked + .toggle-label:after {
+  left: calc(100% - 5px);
+  transform: translateX(-100%);
+}
+
+.toggle-label:active:after {
+  width: 30px;
 }
 </style>

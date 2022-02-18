@@ -1,55 +1,118 @@
 <template>
   <div>
-     <span class="margin-bottom-small block">
-        <label><b>Title</b></label>
-        <input class="input title"  v-model="model.title"/>
-      </span>
-      <div class="uk-margin-small">
-        <fieldset class="intro-input uk-flex uk-flex-column">
-          <label for="subtitle">
-            <b>Subtitle</b>
-          </label>
-          <textarea label="subtitle" v-model="model.subtitle"/>
-        </fieldset>
-      </div>
-      <div class="uk-margin uk-flex uk-flex-column">
-          <label><b>Color</b></label>
-          <select name="color" id="color" v-model="model.color">
-            <option value="">Select One:</option>
-            <option :key="option.text" v-for="option in options" :value="option.value">
-              {{ option.text }}
-            </option>
-          </select>
-      </div>
-    <div class="dataHeading" v-if="model.items !== undefined">
-      <span>
-        <label>Label</label>
-        <input class="input" :class="{error: model.items[0][0] === ''}"  v-model="model.items[0][0]"/>
-      </span>
-      <span>
-        <label>Measurement</label>
-        <input class="input" :class="{error: model.items[0][1] === ''}"  v-model="model.items[0][1]"/>
-      </span>
+    <fieldset class="intro-input">
+      <label><b>Title</b></label>
+      <input class="input title"  v-model="model.title"/>
+    </fieldset>
+    <div class="uk-margin">
+      <fieldset class="intro-input">
+        <label for="subtitle">
+          <b>Subtitle</b>
+        </label>
+        <textarea label="subtitle" v-model="model.subtitle"/>
+      </fieldset>
     </div>
-    <div>
-      <ol class="data-list">
-        <li class="data-list-item" v-for="(item, index) in model.items" :key="index">
-          <fieldset class="fieldset" v-if="index !== 0">
-            <input class="input" v-model="model.items[index][0]"/>
-            <input
-            class="input"
-            :class="{error: isNaN(Number(model.items[index][1]))}"
-            v-model.number="model.items[index][1]" />
-            <button class="delete-button" @click="removeField(index)" v-show="index !== 0 && model.items.length > 2">
-              <span class="line"/>
-              <span class="line"/>
-            </button>
-          </fieldset>
-          <button v-if="index !== 0" class="add-item-button" @click="addField(index)">
+    <div class="uk-flex uk-flex-column uk-margin">
+      <label class="uk-margin-medium-right"><b>Use Category Axis</b></label>
+      <span class="uk-margin-medium-left">
+        <input class="toggle-input" type="checkbox" id="switch" v-model="model.useCategoryAxis" />
+        <label class="toggle-label" for="switch">Toggle</label>
+      </span>
+      <p style="margin-top: 0">Using Category Axis will remove all smart date X Axis logic. Items will be spaced out evenly no matter what their label is.</p>
+    </div>
+    <span class="uk-flex uk-flex-column uk-margin">
+      <label class="uk-margin-small"><b>Color</b></label>
+      <select name="color" id="color" v-model="model.color">
+        <option value="">Select One:</option>
+        <option :key="option.text" v-for="option in options" :value="option.value">
+          {{ option.text }}
+        </option>
+      </select>
+    </span>
+    <span class="uk-flex uk-flex-column uk-margin">
+      <label><b>Data Interval</b></label>
+      <p style="margin-top: 0" class="uk-margin-small">For example, if we have daily data (one data item per day), we'd select "day":</p>
+      <p style="margin-top: 3px">Do not set "year" unless every data point is the same date of different years.</p>
+      <select name="dateInterval" id="dateInterval" v-model="model.dateInterval">
+        <option value="">Select One:</option>
+        <option :key="interval" v-for="interval in dateIntervals" :value="interval">
+          {{ interval }}
+        </option>
+      </select>
+    </span>
+    <span class="uk-flex uk-flex-column uk-margin">
+      <label><b>Grid Date Interval</b></label>
+      <p style="margin-top: 0" class="uk-margin-small">Interval to show the grid lines at.</p>
+      <select name="gridDateInterval" id="gridDateInterval" v-model="model.gridDateInterval">
+        <option value="">Select One:</option>
+        <option :key="interval" v-for="interval in dateIntervals" :value="interval">
+          {{ interval }}
+        </option>
+      </select>
+    </span>
+    <span class="uk-flex uk-flex-column uk-margin">
+      <label><b>Grid Line Frequency</b></label>
+      <p style="margin-top: 0" class="uk-margin-small">How often to show a line for selected Date Interval. 1 means show for every "Date Interval" selected. 2 means show for every second "Date Interval".</p>
+      <input name="gridInterval" id="gridInterval" v-model="model.gridInterval" class="input title"  />
+    </span>
+    <span class="uk-flex uk-flex-column uk-margin">
+      <label><b>Date Format</b></label>
+      <p style="margin-top: 0" class="uk-margin-small">Example: MM-YYY or YYY</p>
+      <input name="dateFormat" id="dateFormat" v-model="model.dateFormat" class="input title"  />
+    </span>
+    <div class="column-button-wrapper">
+      <button v-show="model.columns > 2" class="column-button remove-button" @click="removeColumn()">
+        &#8722;
+      </button>
+      <button class="column-button add-button" @click="addColumn()">
+        &#x002B;
+      </button>
+    </div>
+    <table class="table">
+      <!-- Header/Lablels -->
+      <tr class="dataHeading">
+        <th v-for="(column, index) in model.columns" :key="index">
+          <label>{{index === 0 ? 'Date' : 'Label'}}</label>
+          <input v-show="index !== 0" class="input" :class="{error: model.items[0][index] === ''}"  v-model="model.items[0][index]"/>
+        </th>
+      </tr>
+      <!-- Dates/Data -->
+      <tr class="data-list" :class="{hideItem: itemIndex === 0}" v-for="(item, itemIndex) in model.items" :key="itemIndex">
+        <td class="data-list-item" v-for="(columnItem, columnIndex) in model.columns" :key="columnIndex">
+          <button v-show="columnIndex === 0" class="add-item-button" @click="addField(itemIndex)">
             &#x002B;
           </button>
-        </li>
-      </ol>
+           <button class="delete-button" @click="removeField(itemIndex)" v-show="itemIndex !== 0 && model.items.length > 2">
+            <span class="line"/>
+            <span class="line"/>
+          </button>
+          <span  v-if="itemIndex !== 0">
+            <input
+              v-show="columnIndex === 0"
+              v-if="model.useCategoryAxis === true"
+              class="input date-selector"
+              :class="{error: model.items[itemIndex][columnIndex] === ''}"
+              v-model="model.items[itemIndex][columnIndex]"
+              />
+            <input
+              v-else
+              v-show="columnIndex === 0"
+              class="input date-selector"
+              type="date"
+              :class="{error: model.items[itemIndex][columnIndex] === ''}"
+              v-model="model.items[itemIndex][columnIndex]"
+              />
+            <input
+              v-if="columnIndex !== 0"
+              class="input"
+              :class="{error: model.items[itemIndex][columnIndex] === undefined || isNaN(Number(model.items[itemIndex][columnIndex]))}"
+              v-model.number="model.items[itemIndex][columnIndex]"
+              />
+        </span>
+        </td>
+      </tr>
+    </table>
+    <div class="button-wrapper">
       <button class="button add-button" @click="addField(model.items.length)">
         ADD ITEM
       </button>
@@ -73,18 +136,35 @@ export default {
         { text: "Red", value: "red" },
         { text: "Purple", value: "purple" },
         { text: "Orange", value: "orange" }
-      ]
+      ],
+      dateIntervals: ["day", "week", "month", "year"]
     };
+  },
+  computed: {
+    gridSpacingEmpty: function() {
+      return (
+        this.model.gridSpacing !== null &&
+        this.model.gridSpacing !== "" &&
+        isNaN(Number(this.model.gridSpacing))
+      );
+    }
   },
   methods: {
     initWith() {
       return {
         // needs to be equal to your storyblok plugin name
-        plugin: "pie-chart",
+        plugin: "line-chart",
         title: "",
         subtitle: "",
         color: "",
-        items: [["", ""], ["", 0]]
+        items: [["Date", ""], [""]],
+        columns: 2,
+        gridSpacing: "",
+        dateFormat: "",
+        dateInterval: "month",
+        gridDateInterval: "year",
+        gridInterval: 1,
+        useCategoryAxis: false
       };
     },
     pluginCreated() {
@@ -93,12 +173,25 @@ export default {
         "View source and customize: https://github.com/storyblok/storyblok-fieldtype"
       );
     },
+    addColumn() {
+      this.model.columns = this.model.columns + 1;
+      this.model.items.map((item, index) => {
+        if (index === 0) {
+          item.push("");
+        } else {
+          item.push(0);
+        }
+      });
+    },
+    removeColumn() {
+      this.model.columns = this.model.columns - 1;
+      this.model.items.map(item => {
+        item.pop();
+      });
+    },
     addField(index) {
-      if (this.model.items[0][0] === "" || this.model.items[0][1] === "") {
-        alert("Pleas provide a label and measurement type.");
-        return;
-      }
       this.model.items.splice(index, 0, [""]);
+      // this.model.items.push([""]);
     },
     removeField(index) {
       if (index) {
@@ -124,47 +217,69 @@ export default {
   padding-bottom: 20px;
 }
 
-.dataHeading {
-  padding-bottom: 10px;
-  margin-bottom: 10px;
-  margin-top: 25px;
-  border-bottom: 1px solid;
-  padding-right: 20px;
+.stack-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.stack-wrapper p {
+  margin-left: 10px;
+}
+
+.column-button-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.hideItem {
+  display: none;
+}
+
+.column-button {
+  outline: none;
+  border: 1px solid black;
+  margin-left: 5px;
+}
+
+.intro-input {
+  display: flex;
+  flex-direction: column;
 }
 
 .dataHeading,
 .fieldset {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   column-gap: 10px;
 }
 
-.input {
+.dataHeading {
+  margin-bottom: 10px;
+  margin-top: 25px;
+  padding-bottom: 10px;
+  vertical-align: baseline;
   width: 100%;
+}
+
+.table .input {
+  font-size: 10px !important;
+  padding: 4px !important;
+  width: 100%;
+  min-width: 40px !important;
 }
 
 .input.error {
   border: 1px #f2525f solid !important;
 }
 
-.p-metatags__google-link {
-  color: green;
-}
-
-.p-metatags__preview {
-  margin: 5px 0 15px;
-  padding: 10px;
-  color: #000;
-  background: #fff;
-}
-
 .data-list {
   margin-top: 0px;
   margin-left: 0px;
-  margin-right: 0px;
   margin-bottom: 20px;
   padding: 0;
   list-style-type: none;
+  position: relative;
 }
 
 .data-list-item {
@@ -174,14 +289,109 @@ export default {
   position: relative;
 }
 
-.data-list-item .fieldset {
-  padding-right: 20px;
+.date-selector {
+  width: 80px;
+  position: relative;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  width: 10px;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.list p {
+  margin: 0;
+}
+
+.button-wrapper {
+  display: flex;
+  margin-top: 20px;
+}
+
+.button {
+  outline: none;
+  padding: 8px 10px;
+  margin-right: 10px;
+  border: none;
+  color: #212121;
+  font-weight: 600;
+  border: 1px solid black;
+  white-space: nowrap;
+}
+
+.add-button {
+  background-color: #54e0ae;
+}
+
+.remove-button {
+  background-color: #f2525f;
+}
+
+/* TOGGLE */
+.switch {
+  height: 30px;
+  width: 30px;
+  visibility: hidden;
+  position: absolute;
+}
+
+.switch-label {
+  cursor: pointer;
+  text-indent: -9999px;
+  width: 40px;
+  height: 25px;
+  background: grey;
+  display: block;
+  border-radius: 100px;
+  position: relative;
+}
+
+.switch-label:after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 15px;
+  height: 15px;
+  background: #fff;
+  border-radius: 90px;
+  transition: 0.3s;
+}
+
+.switch:checked + label {
+  background: #0bd28b;
+}
+
+.switch:checked + label:after {
+  left: calc(100% - 5px);
+  transform: translateX(-100%);
+}
+
+.switch-label:active:after {
+  width: 30px;
+}
+
+.delete-button {
+  position: absolute;
+  right: 0;
+  top: 12px;
+  margin: auto 0;
+  height: 15px;
+  width: 15px;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f2525f;
 }
 
 .add-item-button {
   position: absolute;
   left: 0;
-  top: 0;
+  top: 12px;
   margin: auto 0;
   height: 15px;
   width: 15px;
@@ -192,22 +402,6 @@ export default {
   justify-content: center;
   background: #0bd28b;
   z-index: 1;
-}
-
-.delete-button {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  margin: auto;
-  height: 15px;
-  width: 15px;
-  border: none;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f2525f;
 }
 
 .delete-button .line {
@@ -226,37 +420,49 @@ export default {
   transform: rotate(-45deg);
 }
 
-.list p {
-  margin: 0;
+/* TOGGLE */
+
+/* Switch */
+.toggle-input[type="checkbox"] {
+  height: 0;
+  width: 0;
+  visibility: hidden;
+  position: absolute;
 }
 
-.button {
-  outline: none;
-  padding: 8px 10px;
-  margin-right: 10px;
-  border: none;
-  color: #212121;
-  font-weight: 600;
-}
-
-.add-button {
-  background-color: #54e0ae;
-}
-
-.remove-button {
-  background-color: #f2525f;
-}
-
-/* GLOBAL */
-.padding-bottom-small {
-  padding-bottom: 12px;
-}
-
-.margin-bottom-small {
-  padding-bottom: 12px;
-}
-
-.block {
+.toggle-label {
+  cursor: pointer;
+  text-indent: -9999px;
+  width: 40px;
+  height: 25px;
+  background: grey;
   display: block;
+  border-radius: 100px;
+  position: relative;
+}
+
+.toggle-label:after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 15px;
+  height: 15px;
+  background: #fff;
+  border-radius: 90px;
+  transition: 0.3s;
+}
+
+.toggle-input:checked + .toggle-label {
+  background: #0bd28b;
+}
+
+.toggle-input:checked + .toggle-label:after {
+  left: calc(100% - 5px);
+  transform: translateX(-100%);
+}
+
+.toggle-label:active:after {
+  width: 30px;
 }
 </style>
