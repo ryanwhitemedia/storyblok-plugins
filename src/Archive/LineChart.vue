@@ -29,7 +29,7 @@
         </option>
       </select>
     </span>
-    <span class="uk-flex uk-flex-column uk-margin">
+    <span class="uk-flex uk-flex-column uk-margin" v-show="!model.useCategoryAxis">
       <label><b>Data Interval</b></label>
       <p style="margin-top: 0" class="uk-margin-small">For example, if we have daily data (one data item per day), we'd select "day":</p>
       <p style="margin-top: 3px">Do not set "year" unless every data point is the same date of different years.</p>
@@ -40,7 +40,7 @@
         </option>
       </select>
     </span>
-    <span class="uk-flex uk-flex-column uk-margin">
+    <span class="uk-flex uk-flex-column uk-margin" v-show="!model.useCategoryAxis">
       <label><b>Grid Date Interval</b></label>
       <p style="margin-top: 0" class="uk-margin-small">Interval to show the grid lines at.</p>
       <select name="gridDateInterval" id="gridDateInterval" v-model="model.gridDateInterval">
@@ -50,12 +50,12 @@
         </option>
       </select>
     </span>
-    <span class="uk-flex uk-flex-column uk-margin">
+    <span class="uk-flex uk-flex-column uk-margin" v-show="!model.useCategoryAxis">
       <label><b>Grid Line Frequency</b></label>
       <p style="margin-top: 0" class="uk-margin-small">How often to show a line for selected Date Interval. 1 means show for every "Date Interval" selected. 2 means show for every second "Date Interval".</p>
       <input name="gridInterval" id="gridInterval" v-model="model.gridInterval" class="input title"  />
     </span>
-    <span class="uk-flex uk-flex-column uk-margin">
+    <span class="uk-flex uk-flex-column uk-margin" v-show="!model.useCategoryAxis">
       <label><b>Date Format</b></label>
       <p style="margin-top: 0" class="uk-margin-small">Example: MM-YYY or YYY</p>
       <input name="dateFormat" id="dateFormat" v-model="model.dateFormat" class="input title"  />
@@ -164,7 +164,7 @@ export default {
         dateInterval: "month",
         gridDateInterval: "year",
         gridInterval: 1,
-        useCategoryAxis: false
+        useCategoryAxis: true
       };
     },
     pluginCreated() {
